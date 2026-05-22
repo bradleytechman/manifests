@@ -3,8 +3,15 @@ kind: Deployment
 metadata:
   name: api
   namespace: canister
+  labels:
+    app: com.tale.canister.api
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: com.tale.canister.api
@@ -13,19 +20,37 @@ spec:
       labels:
         app: com.tale.canister.api
     spec:
-      restartPolicy: Always
       containers:
-      - name: api
-        image: ghcr.io/cnstr/api:latest
-        imagePullPolicy: Always
-        ports:
         - name: api
-          containerPort: 3000
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        envFrom:
-        - secretRef:
-            name: api-kv
+          image: ghcr.io/cnstr/api:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          envFrom:
+            - secretRef:
+                name: api-kv
+          readinessProbe:
+            httpGet:
+              path: /v2/healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /v2/healthz
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

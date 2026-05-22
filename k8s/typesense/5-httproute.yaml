@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: typesense
+  namespace: canister
+spec:
+  parentRefs:
+    - name: canister-gw
+      namespace: envoy-gateway-system
+      sectionName: https-canister
+  hostnames:
+    - ts-prod1.canister.me
+    - ts-prod2.canister.me
+    - ts-prod3.canister.me
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: typesense
+          port: 8108

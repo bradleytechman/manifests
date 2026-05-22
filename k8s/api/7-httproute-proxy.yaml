@@ -1,0 +1,26 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-proxy
+  namespace: canister
+spec:
+  parentRefs:
+    - name: canister-gw
+      namespace: envoy-gateway-system
+      sectionName: https-tale-api
+  hostnames:
+    - api.tale.me
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v4/canister-services
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /v2
+      backendRefs:
+        - name: api
+          port: 3000

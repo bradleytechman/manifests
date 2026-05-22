@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: core
+  namespace: canister
+  labels:
+    app: com.tale.canister.core
+spec:
+  schedule: "0 * * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app: com.tale.canister.core
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: core
+              image: ghcr.io/cnstr/core:latest
+              imagePullPolicy: Always
+              envFrom:
+                - secretRef:
+                    name: core-kv
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
