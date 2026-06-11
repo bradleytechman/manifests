@@ -3,9 +3,12 @@ kind: Service
 metadata:
   name: vector
   namespace: canister
+  labels:
+    app: com.tale.canister.vector
 spec:
-  ports:
-    - port: 8687
-      targetPort: 8687
   selector:
     app: com.tale.canister.vector
+  ports:
+    - name: ingest
+      port: 8687
+      targetPort: 8687

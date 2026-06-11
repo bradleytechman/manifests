@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: typesense
+  namespace: canister
+  labels:
+    app: com.tale.canister.typesense
+spec:
+  serviceName: typesense
+  replicas: 1
+  selector:
+    matchLabels:
+      app: com.tale.canister.typesense
+  template:
+    metadata:
+      labels:
+        app: com.tale.canister.typesense
+    spec:
+      securityContext:
+        fsGroup: 2000
+        runAsUser: 10000
+        runAsGroup: 3000
+        runAsNonRoot: true
+      containers:
+        - name: typesense
+          image: typesense/typesense:26.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8108
+          env:
+            - name: TYPESENSE_DATA_DIR
+              value: /usr/share/typesense/data
+            - name: TYPESENSE_API_ADDRESS
+              value: 0.0.0.0
+            - name: TYPESENSE_ENABLE_CORS
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: typesense-kv
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8108
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8108
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/typesense/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        # OCI Block Volume CSI. Minimum size on OKE is 50Gi.
+        storageClassName: oci-bv
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi

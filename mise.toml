@@ -1,0 +1,11 @@
+[tools]
+oci = "latest"
+"aqua:helm/helm" = "3.18.4"
+"aqua:getsops/sops" = "3.10.2"
+"aqua:FiloSottile/age" = "1.2.1"
+"aqua:mikefarah/yq" = "latest"
+kubectl = "1.31"
+
+[env]
+SOPS_AGE_KEY_FILE = "{{env.HOME}}/.config/sops/age/keys.txt"
+KUBECONFIG = "{{env.HOME}}/.kube/config"
